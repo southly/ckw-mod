@@ -28,6 +28,7 @@
 /* main.cpp */
 extern HANDLE	gStdIn;
 extern HANDLE	gStdOut;
+extern HWND	gConWnd;
 extern DWORD	gFontW;
 extern DWORD	gFontH;
 extern DWORD	gBorderSize;
@@ -56,5 +57,6 @@ void	sysicon_destroy(HWND hWnd);
 void	updateTrayTip(HWND hWnd, const wchar_t* title);
 void	desktopToTray(HWND hWnd);
 void	trayToDesktop(HWND hWnd);
+BOOL	sendCommand(LPCWSTR cmd);
 
 #endif /* __CKW_H__ */

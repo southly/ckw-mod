@@ -23,6 +23,7 @@
 /* main.cpp */
 extern HANDLE	gStdIn;
 extern HANDLE	gStdOut;
+extern HWND	    gConWnd;
 extern DWORD	gFontW;
 extern DWORD	gFontH;
 extern DWORD	gBorderSize;
@@ -46,5 +47,6 @@ void	onPasteFromClipboard(HWND hWnd);
 void	onDropFile(HDROP hDrop);
 void	sysmenu_init(HWND hWnd);
 BOOL	onSysCommand(HWND hWnd, DWORD id);
+BOOL	sendCommand(LPCWSTR cmd);
 
 #endif /* __CKW_H__ */

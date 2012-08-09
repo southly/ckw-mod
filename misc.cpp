@@ -469,4 +469,21 @@ BOOL	onSysCommand(HWND hWnd, DWORD id)
 	return(FALSE);
 }
 
+BOOL	sendCommand(LPCWSTR cmd)
+{
+#if 1
+	__write_console_input(cmd, (DWORD)wcslen(cmd));
+	return PostMessage(gConWnd, WM_KEYDOWN, VK_RETURN, 1 + (MapVirtualKey(VK_RETURN, 0) << 16));
+#else
+	int len = wcslen(cmd);
+	for(int i = 0; i < len+1; i++) {
+		WPARAM wp = VK_RETURN;
+		if(i < len) wp = towupper(cmd[i]);
+		LPARAM lp = 1 + (MapVirtualKey(wp, 0) << 16);
+		PostMessage(gConWnd, WM_KEYDOWN, wp, lp);
+	}
+	return(TRUE);
+#endif
+}
+
 /* EOF */

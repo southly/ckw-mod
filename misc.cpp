@@ -288,6 +288,12 @@ void	sysmenu_init(HWND hWnd)
 	mii.cch = (UINT) wcslen(mii.dwTypeData);
 	InsertMenuItem(hMenu, SC_CLOSE, FALSE, &mii);
 
+	mii.fType = MFT_STRING;
+	mii.wID = IDM_SENDEXIT;
+	mii.dwTypeData = L"Send Exit (&S)";
+	mii.cch = (UINT) wcslen(mii.dwTypeData);
+	InsertMenuItem(hMenu, SC_CLOSE, FALSE, &mii);
+
 	sysmenu_init_topmost(hWnd, hMenu);
 
     // sysmenu_init_subconfig(hWnd, hMenu);
@@ -462,6 +468,8 @@ BOOL	onSysCommand(HWND hWnd, DWORD id)
 		return(TRUE);
 	case IDM_TOPMOST:
 		return onTopMostMenuCommand(hWnd);
+	case IDM_SENDEXIT:
+		return sendCommand(L"exit");
 	}
     if(IDM_CONFIG_SELECT < id && id <= IDM_CONFIG_SELECT_MAX) {
         return onConfigMenuCommand(hWnd, id);

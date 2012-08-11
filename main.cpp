@@ -979,7 +979,37 @@ static void __hide_alloc_console()
 	}
 }
 
-static void _terminate();
+#define SAFE_CloseHandle(handle) \
+	if(handle) { CloseHandle(handle); handle = NULL; }
+
+#define SAFE_DeleteObject(handle) \
+	if(handle) { DeleteObject(handle); handle = NULL; }
+
+/*----------*/
+static void _terminate()
+{
+	if(gTitle) {
+		delete [] gTitle;
+		gTitle = NULL;
+	}
+	if(gScreen) {
+		delete [] gScreen;
+		gScreen = NULL;
+	}
+	if(gCSI) {
+		delete gCSI;
+		gCSI = NULL;
+	}
+	gConWnd = NULL;
+	SAFE_CloseHandle(gStdIn);
+	SAFE_CloseHandle(gStdOut);
+	SAFE_CloseHandle(gStdErr);
+	SAFE_CloseHandle(gChild);
+	SAFE_DeleteObject(gFont);
+	SAFE_DeleteObject(gBgBrush);
+	SAFE_DeleteObject(gBgBmp);
+	ime_wrap_term();
+}
 
 /*----------*/
 BOOL WINAPI sig_handler(DWORD n)
@@ -1172,38 +1202,6 @@ static BOOL initialize()
 	SetCurrentDirectory(path);
 	*/
 	return(TRUE);
-}
-
-#define SAFE_CloseHandle(handle) \
-	if(handle) { CloseHandle(handle); handle = NULL; }
-
-#define SAFE_DeleteObject(handle) \
-	if(handle) { DeleteObject(handle); handle = NULL; }
-
-/*----------*/
-static void _terminate()
-{
-	if(gTitle) {
-		delete [] gTitle;
-		gTitle = NULL;
-	}
-	if(gScreen) {
-		delete [] gScreen;
-		gScreen = NULL;
-	}
-	if(gCSI) {
-		delete gCSI;
-		gCSI = NULL;
-	}
-	gConWnd = NULL;
-	SAFE_CloseHandle(gStdIn);
-	SAFE_CloseHandle(gStdOut);
-	SAFE_CloseHandle(gStdErr);
-	SAFE_CloseHandle(gChild);
-	SAFE_DeleteObject(gFont);
-	SAFE_DeleteObject(gBgBrush);
-	SAFE_DeleteObject(gBgBmp);
-	ime_wrap_term();
 }
 
 #ifdef _DEBUG

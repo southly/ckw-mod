@@ -3,6 +3,7 @@
 
 import os
 import sys
+from optparse import OptionParser
 from string import Template
 from xml.sax.saxutils import escape
 
@@ -932,24 +933,44 @@ def template_substitute(template, params):
     return template.substitute(params)
 
 
-def write_html(filename='colors.html', params={}):
+def write_html(filename='colors.html', template_string=html_template, params={}):
     with open(filename, "w") as f:
-        t = Template(html_template)
+        t = Template(template_string)
         f.write(template_substitute(t, params))
 
 
-def main():
-    cfg = sys.argv[1] if len(sys.argv) > 1 else "ckw.cfg"
-    if len(sys.argv) > 2:
-        f = sys.argv[2]
+def get_output_filename(config, output):
+    if output:
+        return output
     else:
-        t = os.path.split(cfg)
+        t = os.path.split(config)
         f = os.path.join(t[0],
                          t[1].lstrip(".").replace(".", "-") + "-colors.html")
+        return f
 
-    colors = read_config(cfg)
-    params = make_params(cfg, colors)
-    write_html(f, params)
+
+def load_template(filename):
+    if filename:
+        with open(filename, "r") as f:
+            return f.read()
+    else:
+        return html_template
+
+
+def main():
+    usage = "usage: %prog [options]"
+    parser = OptionParser(usage)
+    parser.add_option("-T", "--template", dest="template", help="set TEMPLATE file")
+    parser.add_option("-o", "--output", dest="output", help="set OUTPUT file")
+    parser.add_option("-c", "--config", dest="config",
+                      default="ckw.cfg", help="set CONFIG file")
+    (options, args) = parser.parse_args()
+
+    colors = read_config(options.config)
+    params = make_params(options.config, colors)
+    output_filename = get_output_filename(options.config, options.output)
+    template_filename = load_template(options.template)
+    write_html(output_filename, template_filename, params)
 
 
 if __name__ == '__main__':

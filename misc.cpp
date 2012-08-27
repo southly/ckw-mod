@@ -32,17 +32,17 @@ static void __write_console_input(LPCWSTR str, DWORD length)
 	if(!str || !length) return;
 
 	INPUT_RECORD *p, *buf;
-	DWORD	i = 0;
 	p = buf = new INPUT_RECORD[ length ];
 
-	for( ; i < length ; i++, p++) {
+	for(DWORD i = 0; i < length; i++) {
 		p->EventType = KEY_EVENT;
 		p->Event.KeyEvent.bKeyDown = TRUE;
 		p->Event.KeyEvent.wRepeatCount = 1;
 		p->Event.KeyEvent.wVirtualKeyCode = 0;
 		p->Event.KeyEvent.wVirtualScanCode = 0;
-		p->Event.KeyEvent.uChar.UnicodeChar = *str++;
+		p->Event.KeyEvent.uChar.UnicodeChar = str[i];
 		p->Event.KeyEvent.dwControlKeyState = 0;
+		p++;
 	}
 
 	WriteConsoleInput(gStdIn, buf, length, &length);

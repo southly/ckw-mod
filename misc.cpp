@@ -36,20 +36,28 @@ static void __write_console_input(LPCWSTR str, DWORD length)
 	bool eol_lf = gEolLF;
 	INPUT_RECORD *p, *buf;
 	DWORD count = 0;
+	DWORD n = 0;
 	p = buf = new INPUT_RECORD[ length ];
 
 	for(DWORD i = 0; i < length; i++) {
-		if (eol_lf && str[i] == L'\r' && str[i+1] == L'\n') continue;
-
-		p->EventType = KEY_EVENT;
-		p->Event.KeyEvent.bKeyDown = TRUE;
-		p->Event.KeyEvent.wRepeatCount = 1;
-		p->Event.KeyEvent.wVirtualKeyCode = 0;
-		p->Event.KeyEvent.wVirtualScanCode = 0;
-		p->Event.KeyEvent.uChar.UnicodeChar = str[i];
-		p->Event.KeyEvent.dwControlKeyState = 0;
-		p++;
-		count++;
+		if (str[i] == L'\n') {
+			WriteConsoleInput(gStdIn, buf, count, &n);
+			PostMessage(gConWnd, WM_KEYDOWN, VK_RETURN, 1 + (MapVirtualKey(VK_RETURN, 0) << 16));
+			p = buf;
+			count = 0;
+		} else if (str[i] == L'\r' && str[i+1] == L'\n') {
+			continue;
+		} else {
+			p->EventType = KEY_EVENT;
+			p->Event.KeyEvent.bKeyDown = TRUE;
+			p->Event.KeyEvent.wRepeatCount = 1;
+			p->Event.KeyEvent.wVirtualKeyCode = 0;
+			p->Event.KeyEvent.wVirtualScanCode = 0;
+			p->Event.KeyEvent.uChar.UnicodeChar = str[i];
+			p->Event.KeyEvent.dwControlKeyState = 0;
+			p++;
+			count++;
+		}
 	}
 
 	WriteConsoleInput(gStdIn, buf, count, &length);

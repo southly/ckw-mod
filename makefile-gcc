@@ -11,7 +11,7 @@ CXXFLAGS = -O2 $(INCLUDE) \
            -fomit-frame-pointer
 LDFLAGS = -mwindows -Wl,--enable-stdcall-fixup -static -s
 LDLIBS = -lshlwapi -limm32
-RFLAGS = -J rc -O coff
+RFLAGS = -J rc -O coff -F pe-x86-64
 
 ifdef DEBUG
 CXXFLAGS = -g -Wall -Wextra $(INCLUDE)
@@ -23,7 +23,7 @@ SRCS = main.cpp \
        misc.cpp \
        option.cpp \
        selection.cpp
-OBJS = $(SRCS:.cpp=.o) rsrc.res
+OBJS = $(SRCS:.cpp=.o) rsrc.res ckwmanifest.res
 
 .SUFFIXES:
 .SUFFIXES: .o .cpp .res .rc

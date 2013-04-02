@@ -296,7 +296,9 @@ void	sysmenu_init(HWND hWnd)
 
 	sysmenu_init_topmost(hWnd, hMenu);
 
-    // sysmenu_init_subconfig(hWnd, hMenu);
+#if 0
+	sysmenu_init_subconfig(hWnd, hMenu);
+#endif
 
 	mii.fType = MFT_SEPARATOR;
 	mii.wID = 0;
@@ -317,6 +319,7 @@ void	sysmenu_init(HWND hWnd)
 	InsertMenuItem(hMenu, SC_CLOSE, FALSE, &mii);
 }
 
+#if 0
 void    get_directory_path(wchar_t *path)
 {
 	wchar_t *c;
@@ -324,6 +327,7 @@ void    get_directory_path(wchar_t *path)
 	c = wcsrchr(path, L'\\');
 	if(c) *c = 0;
 }
+#endif
 
 void	sysmenu_init_topmost(HWND hWnd, HMENU hMenu)
 {
@@ -343,37 +347,38 @@ void	sysmenu_init_topmost(HWND hWnd, HMENU hMenu)
 	changeStateTopMostMenu(hWnd,hMenu);
 }
 
+#if 0
 void	sysmenu_init_subconfig(HWND hWnd, HMENU hMenu)
 {
 	MENUITEMINFO mii;
-    HMENU hSubMenu = CreatePopupMenu();
+	HMENU hSubMenu = CreatePopupMenu();
 
 	memset(&mii, 0, sizeof(mii));
 	mii.cbSize = sizeof(mii);
 	mii.fMask = MIIM_TYPE | MIIM_ID;
 
 	wchar_t path[MAX_PATH+1];
-    get_directory_path(path);
-    wcscat_s(path, L"\\*.cfg");
+	get_directory_path(path);
+	wcscat_s(path, L"\\*.cfg");
 
-    WIN32_FIND_DATA fd;
+	WIN32_FIND_DATA fd;
 	memset(&fd, 0, sizeof(fd));
-    HANDLE hFile = FindFirstFile(path, &fd);
-    //MessageBox(hWnd, path, L"", MB_OK);
+	HANDLE hFile = FindFirstFile(path, &fd);
+	//MessageBox(hWnd, path, L"", MB_OK);
 
-    if (hFile != INVALID_HANDLE_VALUE)
-    {
-        for(int i = 0;;i++)
-        {
-            mii.fType = MFT_STRING;
-            mii.wID = IDM_CONFIG_SELECT_1 + i;
-            mii.dwTypeData = fd.cFileName;
-            mii.cch = (UINT) wcslen(mii.dwTypeData);
-            InsertMenuItem(hSubMenu, 0, TRUE, &mii);
-            if(FindNextFile(hFile, &fd) == 0) { break; }
-        }
-        FindClose(hFile);
-    }
+	if (hFile != INVALID_HANDLE_VALUE)
+	{
+		for(int i = 0;;i++)
+		{
+			mii.fType = MFT_STRING;
+			mii.wID = IDM_CONFIG_SELECT_1 + i;
+			mii.dwTypeData = fd.cFileName;
+			mii.cch = (UINT) wcslen(mii.dwTypeData);
+			InsertMenuItem(hSubMenu, 0, TRUE, &mii);
+			if(FindNextFile(hFile, &fd) == 0) { break; }
+		}
+		FindClose(hFile);
+	}
 
 	mii.fMask |= MIIM_SUBMENU;
 	mii.fType = MFT_STRING;
@@ -391,35 +396,36 @@ void reloadConfig(wchar_t *path)
 
 	ckOpt opt;
 	opt.setFile(filepath);
-    init_options(opt);
+	init_options(opt);
 }
 
 BOOL    onConfigMenuCommand(HWND hWnd, DWORD id)
 {
 	wchar_t path[MAX_PATH+1];
-    get_directory_path(path);
+	get_directory_path(path);
 
 	MENUITEMINFO mii;
 	memset(&mii, 0, sizeof(mii));
 	mii.cbSize = sizeof(mii);
 	mii.fMask = MIIM_TYPE | MIIM_ID;
-    mii.fType = MFT_STRING;
+	mii.fType = MFT_STRING;
 
 	HMENU hMenu = GetSystemMenu(hWnd, FALSE);
-    if (GetMenuItemInfo(hMenu, id, 0, &mii))
-    {
-        wchar_t sz[MAX_PATH+1], filepath[MAX_PATH+1];
-        mii.dwTypeData = sz;
-        mii.cch++;
-        GetMenuItemInfo(hMenu, id, 0, &mii);
-        wsprintf(filepath, L"%s\\%s", path, sz);
-        /* need to open file and update config here */
-        MessageBox(hWnd, filepath, L"", MB_OK);
+	if (GetMenuItemInfo(hMenu, id, 0, &mii))
+	{
+		wchar_t sz[MAX_PATH+1], filepath[MAX_PATH+1];
+		mii.dwTypeData = sz;
+		mii.cch++;
+		GetMenuItemInfo(hMenu, id, 0, &mii);
+		wsprintf(filepath, L"%s\\%s", path, sz);
+		/* need to open file and update config here */
+		MessageBox(hWnd, filepath, L"", MB_OK);
 		reloadConfig(filepath);
-    }
+	}
 
-    return(TRUE);
+	return(TRUE);
 }
+#endif
 
 BOOL	onTopMostMenuCommand(HWND hWnd)
 {
@@ -476,9 +482,12 @@ BOOL	onSysCommand(HWND hWnd, DWORD id)
 		}
 		return(TRUE);
 	}
-    if(IDM_CONFIG_SELECT < id && id <= IDM_CONFIG_SELECT_MAX) {
-        return onConfigMenuCommand(hWnd, id);
-    }
+#if 0
+	if(IDM_CONFIG_SELECT < id && id <= IDM_CONFIG_SELECT_MAX) {
+		return onConfigMenuCommand(hWnd, id);
+	}
+#endif
+
 	return(FALSE);
 }
 

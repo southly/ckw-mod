@@ -1150,47 +1150,67 @@ void	ckOpt::_loadXdefaults(const char *path)
 	fclose(fp);
 }
 
-static bool getconfigfile(const char* env, char *cfgfile, char *path, int size)
+int ckOpt::load(const wchar_t *path)
 {
-	if(GetEnvironmentVariableA(env, path, size)) {
-		sprintf_s(path, size, "%s\\%s", path, cfgfile);
-		if(PathFileExistsA(path) && !PathIsDirectoryA(path)) {
-			return true;
+	if (!PathFileExistsW(path)) return 1;
+
+	int alen = WideCharToMultiByte(CP_ACP, 0, path, -1, 0, 0, NULL, NULL);
+	char *apath = new char[alen + 1];
+	int r = WideCharToMultiByte(CP_ACP, 0, path, -1, apath, alen, NULL, NULL);
+	apath[r] = '\0';
+	_loadXdefaults(apath);
+	delete[] apath;
+	return 0;
+}
+
+static DWORD get_home_directory(wchar_t *path, DWORD size)
+{
+	wchar_t *env[] = {L"HOME", L"USERPROFILE"};
+	int len = sizeof(env) / sizeof(env[0]);
+
+	for (int i = 0; i < len; ++i) {
+		DWORD n = GetEnvironmentVariableW(env[i], path, size);
+		if (n > 0 && PathFileExistsW(path) && PathIsDirectoryW(path)) {
+			return n;
 		}
 	}
-	return false;
+
+	return 0;
 }
 
 void ckOpt::loadXdefaults()
 {
-	char path[MAX_PATH+1];
-	char cfgfile[MAX_PATH] = "_";
+	wchar_t path[MAX_PATH];
+	DWORD nx = GetModuleFileNameW(NULL, path, MAX_PATH);
+	wchar_t home_path[MAX_PATH];
+	DWORD ny = get_home_directory(home_path, MAX_PATH);
+	wchar_t cfg_path[MAX_PATH];
 
-	if (0 != GetModuleFileNameA(NULL, path, MAX_PATH)) {
-		char szDrive[MAX_PATH];
-		char szDir[MAX_PATH];
-		char szFile[MAX_PATH];
-		char szBuf[MAX_PATH];
-		_splitpath_s(path, szDrive, szDir, szFile, szBuf);
-		strcat_s(cfgfile, szFile);
+	if (!nx && !ny) return;
+	if (nx) {
+		wchar_t *ext = PathFindExtensionW(path);
+		*ext = L'\0';
+		wchar_t *name = PathFindFileNameW(path);
+		std::wstring name_str = name;
+		*name = L'\0';
 
-		// directory execute exists
-		_makepath_s(path, szDrive, szDir, szFile, ".cfg");
-		_loadXdefaults(path);
-		_makepath_s(path, szDrive, szDir, cfgfile, NULL);
-		_loadXdefaults(path);
+		std::wstring cfg_name = name_str + L".cfg";
+		wchar_t *p = PathCombineW(cfg_path, path, cfg_name.c_str());
+		if (p) load(cfg_path);
 
-		path[0] = '\0';
-		// HOME or USERPROFILE
-		if (!getconfigfile("HOME", cfgfile, path, MAX_PATH)) {
-			getconfigfile("USERPROFILE", cfgfile, path, MAX_PATH);
+		cfg_name = L"_" + name_str;
+		p = PathCombineW(cfg_path, path, cfg_name.c_str());
+		if (p) load(cfg_path);
+
+		if (ny) {
+			p = PathCombineW(cfg_path, home_path, cfg_name.c_str());
+			if (p) load(cfg_path);
 		}
-		if (path[0] != '\0') _loadXdefaults(path);
 	}
 
-	if(GetEnvironmentVariableA("HOME", path, MAX_PATH)) {
-		strcat_s(path, "\\.Xdefaults");
-		_loadXdefaults(path);
+	if (ny) {
+		wchar_t *p = PathCombineW(cfg_path, home_path, L".Xdefaults");
+		if (p) load(cfg_path);
 	}
 }
 

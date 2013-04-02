@@ -108,6 +108,9 @@ private:
 	std::string	m_title;
 	int		m_bgBmpPos;
 	bool		m_isCurBlink;
+
+public:
+	int load(const wchar_t *path);
 };
 
 #endif /* __CK_OPT_H__ */

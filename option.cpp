@@ -834,7 +834,9 @@ static bool lookupBoolean(const char *value)
 	if(!strcasecmp(value, "true") ||
 	   !strcasecmp(value, "yes") ||
 	   !strcasecmp(value, "on") ||
-	   !strcasecmp(value, "1"))
+	   !strcasecmp(value, "1") ||
+	   !strcasecmp(value, "t") ||
+	   !strcasecmp(value, "y"))
 		return(true);
 	return(false);
 }

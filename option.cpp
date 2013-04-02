@@ -841,6 +841,59 @@ static bool lookupBoolean(const char *value)
 	return(false);
 }
 
+static bool lookupInteger(const char *value, int min, int &ret)
+{
+	int v = 0;
+	int n = sscanf_s(value, "%d", &v);
+	if (n == 1 && v >= min) {
+		ret = v;
+		return true;
+	}
+
+	fprintf(stderr, "ERROR: invalid integer. \"%s\"\n", value);
+	fflush(stderr);
+	return false;
+}
+
+static bool lookupInteger(const char *value, int min, int max, int &ret)
+{
+	int v = 0;
+	int n = sscanf_s(value, "%d", &v);
+	if (n == 1 && v >= min && v <= max) {
+		ret = v;
+		return true;
+	}
+
+	fprintf(stderr, "ERROR: invalid integer. \"%s\"\n", value);
+	fflush(stderr);
+	return false;
+}
+
+static bool lookupString(const char *value, std::string &ret)
+{
+	ret = value;
+	return true;
+}
+
+static bool lookupPathname(const char *value, bool isdir, std::string &ret)
+{
+	if (isdir) {
+		if (PathFileExistsA(value) && PathIsDirectoryA(value)) {
+			ret = value;
+			return true;
+		}
+	} else {
+		if (PathFileExistsA(value) && !PathIsDirectoryA(value)) {
+			ret = value;
+			return true;
+		}
+	}
+
+	fprintf(stderr, "ERROR: invalid pathname. \"%s\"\n", value);
+	fflush(stderr);
+	return false;
+}
+
 static void usage_fmtL(const char *name, const char *type)
 {
 	if(!name) return;
@@ -1021,27 +1074,27 @@ int	ckOpt::setOption(const char *name, const char *value, bool rsrc)
 	CHK_MISC("background",		"bg",		lookupColor(value, m_colorBg));
 	CHK_MISC("cursorColor",		"cr",		lookupColor(value, m_colorCursor));
 	CHK_MISC("cursorImeColor",	"cri",		lookupColor(value, m_colorCursorIme));
-	CHK_MISC("backgroundBitmap",	"bitmap",	m_bgBmp = value);
-	CHK_MISC("icon",		NULL,		m_icon = value);
+	CHK_MISC("backgroundBitmap",	"bitmap",	lookupPathname(value, false, m_bgBmp));
+	CHK_MISC("icon",		NULL,		lookupPathname(value, false, m_icon));
 	CHK_BOOL("alwaysTray",		"tray",		m_alwaysTray);
 	CHK_BOOL("minimizeToTray",	"mintray",	m_minimizeToTray);
 	CHK_MISC("geometry",		"g",		geometry(value));
 	CHK_BOOL(NULL, 			"iconic",	m_isIconic);
-	CHK_MISC("font",		"fn",		m_font = value);
-	CHK_MISC("fontSize",		"fs",		m_fontSize = atoi(value));
+	CHK_MISC("font",		"fn",		lookupString(value, m_font));
+	CHK_MISC("fontSize",		"fs",		lookupInteger(value, 0, m_fontSize));
 	CHK_BOOL("scrollHide",		"sh",		m_scrollHide);
 	CHK_BOOL("scrollRight",		"sr",		m_scrollRight);
-	CHK_MISC("saveLines",		"sl",		m_saveLines = atoi(value));
-	CHK_MISC("internalBorder",	"b",		m_borderSize = atoi(value));
-	CHK_MISC("lineSpace",		"lsp",		m_lineSpace = atoi(value));
-	CHK_MISC("transp",		"tr",		m_transp = atoi(value));
+	CHK_MISC("saveLines",		"sl",		lookupInteger(value, 0, m_saveLines));
+	CHK_MISC("internalBorder",	"b",		lookupInteger(value, 0, m_borderSize));
+	CHK_MISC("lineSpace",		"lsp",		lookupInteger(value, 0, m_lineSpace));
+	CHK_MISC("transp",		"tr",		lookupInteger(value, 0, 255, m_transp));
 	CHK_MISC("transpColor",		"trc",		m_isTranspColor = lookupColor(value,m_transpColor));
 	CHK_BOOL("topmost",		"top",		m_isTopMost);
-	CHK_MISC("chdir",		"cd",		m_curDir = value);
-	CHK_MISC("exec",		"x",		m_cmd = value);
-	CHK_MISC("title",		"tl",		m_title = value);
+	CHK_MISC("chdir",		"cd",		lookupPathname(value, true, m_curDir));
+	CHK_MISC("exec",		"x",		lookupString(value, m_cmd));
+	CHK_MISC("title",		"tl",		lookupString(value, m_title));
 	CHK_MISC("config",		"c",		_loadXdefaults(value));
-	CHK_MISC("backgroundBitmapPos",	"bitmappos",	m_bgBmpPos = atoi(value));
+	CHK_MISC("backgroundBitmapPos",	"bitmappos",	lookupInteger(value, 0, 7, m_bgBmpPos));
 	CHK_BOOL("cursorBlink",		"crb",		m_isCurBlink);
 
 

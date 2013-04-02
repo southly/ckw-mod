@@ -1172,18 +1172,18 @@ void ckOpt::loadXdefaults()
 		_splitpath_s(path, szDrive, szDir, szFile, szBuf);
 		strcat_s(cfgfile, szFile);
 
+		// directory execute exists
+		_makepath_s(path, szDrive, szDir, szFile, ".cfg");
+		_loadXdefaults(path);
+		_makepath_s(path, szDrive, szDir, cfgfile, NULL);
+		_loadXdefaults(path);
+
 		path[0] = '\0';
 		// HOME or USERPROFILE
 		if (!getconfigfile("HOME", cfgfile, path, MAX_PATH)) {
 			getconfigfile("USERPROFILE", cfgfile, path, MAX_PATH);
 		}
 		if (path[0] != '\0') _loadXdefaults(path);
-
-		// directory execute exists
-		_makepath_s(path, szDrive, szDir, cfgfile, NULL);
-		_loadXdefaults(path);
-		_makepath_s(path, szDrive, szDir, szFile, ".cfg");
-		_loadXdefaults(path);
 	}
 
 	if(GetEnvironmentVariableA("HOME", path, MAX_PATH)) {

@@ -28,6 +28,7 @@
 /* main.cpp */
 extern HANDLE	gStdIn;
 extern HANDLE	gStdOut;
+extern HWND	gConWnd;
 extern DWORD	gFontW;
 extern DWORD	gFontH;
 extern DWORD	gBorderSize;

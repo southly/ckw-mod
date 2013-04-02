@@ -25,37 +25,42 @@
 #include "rsrc.h"
 #include "option.h"
 
+static bool gEolLF = false;
+
 BOOL init_options(ckOpt& opt);
 
 static void __write_console_input(LPCWSTR str, DWORD length)
 {
 	if(!str || !length) return;
 
+	bool eol_lf = gEolLF;
 	INPUT_RECORD *p, *buf;
-	DWORD	i = 0;
+	DWORD count = 0;
+	DWORD n = 0;
 	p = buf = new INPUT_RECORD[ length ];
 
-	for( ; i < length ; i++, p++) {
-		p->EventType = KEY_EVENT;
-		p->Event.KeyEvent.bKeyDown = TRUE;
-		p->Event.KeyEvent.wRepeatCount = 1;
-		p->Event.KeyEvent.wVirtualKeyCode = 0;
-		p->Event.KeyEvent.wVirtualScanCode = 0;
-		p->Event.KeyEvent.uChar.UnicodeChar = 0;
-		p->Event.KeyEvent.dwControlKeyState = 0;
-		if(*str == '\r') {
-			str++;
-			length--;
-		}
-		if(*str == '\n') {
-			p->Event.KeyEvent.wVirtualKeyCode = VK_RETURN;
-			str++;
+	for(DWORD i = 0; i < length; i++) {
+		if (str[i] == L'\n') {
+			WriteConsoleInput(gStdIn, buf, count, &n);
+			PostMessage(gConWnd, WM_KEYDOWN, VK_RETURN, 1 + (MapVirtualKey(VK_RETURN, 0) << 16));
+			p = buf;
+			count = 0;
+		} else if (str[i] == L'\r' && str[i+1] == L'\n') {
+			continue;
 		} else {
-			p->Event.KeyEvent.uChar.UnicodeChar = *str++;
+			p->EventType = KEY_EVENT;
+			p->Event.KeyEvent.bKeyDown = TRUE;
+			p->Event.KeyEvent.wRepeatCount = 1;
+			p->Event.KeyEvent.wVirtualKeyCode = 0;
+			p->Event.KeyEvent.wVirtualScanCode = 0;
+			p->Event.KeyEvent.uChar.UnicodeChar = str[i];
+			p->Event.KeyEvent.dwControlKeyState = 0;
+			p++;
+			count++;
 		}
 	}
 
-	WriteConsoleInput(gStdIn, buf, length, &length);
+	WriteConsoleInput(gStdIn, buf, count, &length);
 	delete [] buf;
 }
 
@@ -296,7 +301,13 @@ void	sysmenu_init(HWND hWnd)
 
 	sysmenu_init_topmost(hWnd, hMenu);
 
-    // sysmenu_init_subconfig(hWnd, hMenu);
+	mii.fType = MFT_STRING;
+	mii.wID = IDM_TOGGLEEOL;
+	mii.dwTypeData = gEolLF ? L"Toggle Eol [LF] (&E)" : L"Toggle Eol [CRLF] (&E)";
+	mii.cch = (UINT) wcslen(mii.dwTypeData);
+	InsertMenuItem(hMenu, SC_CLOSE, FALSE, &mii);
+
+	// sysmenu_init_subconfig(hWnd, hMenu);
 
 	mii.fType = MFT_SEPARATOR;
 	mii.wID = 0;
@@ -450,6 +461,25 @@ void	changeStateTopMostMenu(HWND hWnd,HMENU hMenu)
 	}
 }
 
+BOOL onToggleEolMenuCommand(HWND hWnd)
+{
+	gEolLF = !gEolLF;
+
+	HMENU hMenu = GetSystemMenu(hWnd, FALSE);
+	MENUITEMINFO mii;
+	memset(&mii, 0, sizeof(mii));
+	mii.cbSize = sizeof(mii);
+	mii.fMask = MIIM_TYPE | MIIM_ID;
+	mii.fType = MFT_STRING;
+	mii.wID = IDM_TOGGLEEOL;
+	mii.dwTypeData = gEolLF ? L"Toggle Eol [LF] (&E)" : L"Toggle Eol [CRLF] (&E)";
+	mii.cch = (UINT) wcslen(mii.dwTypeData);
+
+	SetMenuItemInfo(hMenu, IDM_TOGGLEEOL, FALSE, &mii);
+
+	return TRUE;
+}
+
 /*----------*/
 BOOL	onSysCommand(HWND hWnd, DWORD id)
 {
@@ -475,6 +505,8 @@ BOOL	onSysCommand(HWND hWnd, DWORD id)
 			trayToDesktop(hWnd);
 		}
 		return(TRUE);
+	case IDM_TOGGLEEOL:
+		return onToggleEolMenuCommand(hWnd);
 	}
     if(IDM_CONFIG_SELECT < id && id <= IDM_CONFIG_SELECT_MAX) {
         return onConfigMenuCommand(hWnd, id);

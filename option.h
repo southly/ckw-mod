@@ -106,7 +106,6 @@ private:
 	bool		m_isTopMost;
 	std::string	m_curDir;
 	std::string	m_title;
-	char	m_config_file[MAX_PATH+1];
 	int		m_bgBmpPos;
 	bool		m_isCurBlink;
 };

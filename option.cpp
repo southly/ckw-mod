@@ -973,7 +973,6 @@ ckOpt::ckOpt()
 	m_isTranspColor = false;
 	m_transpColor = 0;
 	m_isTopMost = false;
-	m_config_file[0] = '\0';
 	m_bgBmpPos = 0;
 	m_isCurBlink = false;
 }
@@ -1039,7 +1038,7 @@ int	ckOpt::setOption(const char *name, const char *value, bool rsrc)
 	CHK_MISC("chdir",		"cd",		m_curDir = value);
 	CHK_MISC("exec",		"x",		m_cmd = value);
 	CHK_MISC("title",		"tl",		m_title = value);
-	CHK_MISC("config",		"c",		setFile(value);loadXdefaults() );
+	CHK_MISC("config",		"c",		_loadXdefaults(value));
 	CHK_MISC("backgroundBitmapPos",	"bitmappos",	m_bgBmpPos = atoi(value));
 	CHK_BOOL("cursorBlink",		"crb",		m_isCurBlink);
 
@@ -1149,17 +1148,6 @@ void	ckOpt::_loadXdefaults(const char *path)
 	fclose(fp);
 }
 
-void	ckOpt::setFile(const char *path /*=NULL*/)
-{
-    if(path)
-    {
-        strcpy_s(m_config_file, path);
-    } else
-    {
-        m_config_file[0] = '\0';
-    }
-}
-
 static bool getconfigfile(const char* env, char *cfgfile, char *path, int size)
 {
 	if(GetEnvironmentVariableA(env, path, size)) {
@@ -1173,13 +1161,10 @@ static bool getconfigfile(const char* env, char *cfgfile, char *path, int size)
 
 void ckOpt::loadXdefaults()
 {
-  char path[MAX_PATH+1];
+	char path[MAX_PATH+1];
+	char cfgfile[MAX_PATH] = "_";
 
-  if(m_config_file[0] == '\0')
-  {
-    char cfgfile[MAX_PATH] = "_";
-
-    if (0 != GetModuleFileNameA(NULL, path, MAX_PATH)) {
+	if (0 != GetModuleFileNameA(NULL, path, MAX_PATH)) {
 		char szDrive[MAX_PATH];
 		char szDir[MAX_PATH];
 		char szFile[MAX_PATH];
@@ -1190,7 +1175,7 @@ void ckOpt::loadXdefaults()
 		path[0] = '\0';
 		// HOME or USERPROFILE
 		if (!getconfigfile("HOME", cfgfile, path, MAX_PATH)) {
-		  getconfigfile("USERPROFILE", cfgfile, path, MAX_PATH);
+			getconfigfile("USERPROFILE", cfgfile, path, MAX_PATH);
 		}
 		if (path[0] != '\0') _loadXdefaults(path);
 
@@ -1199,19 +1184,12 @@ void ckOpt::loadXdefaults()
 		_loadXdefaults(path);
 		_makepath_s(path, szDrive, szDir, szFile, ".cfg");
 		_loadXdefaults(path);
-    }
-  }
-  else
-  {
-    path[0] = '\0';
-    strcpy_s(path, m_config_file);
-    _loadXdefaults(path);
-  }
+	}
 
-  if(GetEnvironmentVariableA("HOME", path, MAX_PATH)) {
-    strcat_s(path, "\\.Xdefaults");
-    _loadXdefaults(path);
-  }
+	if(GetEnvironmentVariableA("HOME", path, MAX_PATH)) {
+		strcat_s(path, "\\.Xdefaults");
+		_loadXdefaults(path);
+	}
 }
 
 bool	ckOpt::set(int argc, char *argv[])
